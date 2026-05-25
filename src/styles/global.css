@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+/* Reset Leaflet z-index para que respete cualquier overlay nuestro */
+.leaflet-container {
+  font-family: inherit;
+  background: #f8fafc;
+}
+
+/* Personalización del popup de Leaflet para que se vea más moderno */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  min-width: 240px;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+}
+
+/* Eliminar el feo rectángulo de foco que aparece al hacer click en un polígono */
+.leaflet-interactive:focus {
+  outline: none;
+}
+
+/* Tooltip personalizado para los departamentos */
+.dept-tooltip {
+  background: rgba(15, 23, 42, 0.92);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.dept-tooltip::before {
+  border-top-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+/* Pin animado para la estación seleccionada */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.aqi-pin-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: pulse-ring 1.5s ease-out infinite;
+}

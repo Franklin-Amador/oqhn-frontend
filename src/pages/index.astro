@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StationsMap from '../components/StationsMap';
+---
+
+<Layout>
+  <main class="h-screen w-screen overflow-hidden">
+    {/*
+      `client:only="react"` — Leaflet manipula el DOM directamente y no funciona
+      en SSR. Renderizamos sólo en el cliente para evitar errores de hidratación.
+    */}
+    <StationsMap client:only="react" />
+  </main>
+</Layout>
