@@ -76,12 +76,12 @@ PUBLIC_API_URL=http://127.0.0.1:8001
 
 ## Polling y caché
 
-El frontend actualiza las predicciones cada **10 minutos** en segundo plano (sin recargar la página). El botón "↻ Refrescar" fuerza una consulta inmediata (`?refresh=true`). La API tiene su propio caché en memoria:
+El frontend actualiza las predicciones cada **6 horas** en segundo plano (sin recargar la página). El botón "↻ Refrescar" fuerza una consulta inmediata (`?refresh=true`). La API tiene su propio caché en memoria:
 
 | Endpoint | TTL |
 |----------|-----|
 | `GET /stations` | 1 hora |
-| `GET /stations/predictions` | 10 minutos |
+| `GET /stations/predictions` | 6 horas |
 
 ## Build para producción
 

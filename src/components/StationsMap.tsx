@@ -18,7 +18,7 @@ import { StationPopup } from './StationPopup';
 
 const HN_CENTER: [number, number] = [14.5, -86.5];
 const HN_ZOOM = 7;
-const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 min
+const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 h — hay botón manual para forzar
 
 // Estilo sutil para los polígonos de departamentos (GADM 4.1)
 const DEPT_STYLE = {
