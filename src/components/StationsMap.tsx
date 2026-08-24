@@ -18,7 +18,9 @@ import { StationPopup } from './StationPopup';
 
 const HN_CENTER: [number, number] = [14.5, -86.5];
 const HN_ZOOM = 7;
-const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 h — hay botón manual para forzar
+// 6 h — igual que el cron que regenera predictions.json; refrescar más seguido
+// solo re-leería el mismo JSON.
+const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 // Estilo sutil para los polígonos de departamentos (GADM 4.1)
 const DEPT_STYLE = {
@@ -84,7 +86,7 @@ export default function StationsMap() {
     };
   }, []);
 
-  // Polling de predicciones cada 10 min
+  // Polling de predicciones cada 6 h (igual que el cron que las regenera)
   useEffect(() => {
     const id = setInterval(() => {
       fetchPredictions()
@@ -97,7 +99,7 @@ export default function StationsMap() {
   const handleManualRefresh = async () => {
     setPredsLoading(true);
     try {
-      const p = await fetchPredictions(true);
+      const p = await fetchPredictions();
       setPreds(p);
     } catch (e) {
       setError(String(e));

@@ -96,16 +96,18 @@ export async function fetchHealth(): Promise<HealthResponse> {
   return r.json();
 }
 
-export async function fetchStations(refresh = false): Promise<StationsGeoJSON> {
-  const url = `${API_URL}/stations${refresh ? '?refresh=true' : ''}`;
-  const r = await fetch(url);
+// La API sirve ambos endpoints desde JSON precalculados en Vercel Blob, que un
+// cron regenera cada 6h. No existe un parámetro para forzar un refetch contra
+// OpenAQ: exponerlo permitía que un clic disparara cientos de requests a la API
+// externa y fue parte de lo que provocó el baneo de la key.
+export async function fetchStations(): Promise<StationsGeoJSON> {
+  const r = await fetch(`${API_URL}/stations`);
   if (!r.ok) throw new Error(`/stations: ${r.status}`);
   return r.json();
 }
 
-export async function fetchPredictions(refresh = false): Promise<PredictionsResponse> {
-  const url = `${API_URL}/stations/predictions${refresh ? '?refresh=true' : ''}`;
-  const r = await fetch(url);
+export async function fetchPredictions(): Promise<PredictionsResponse> {
+  const r = await fetch(`${API_URL}/stations/predictions`);
   if (!r.ok) throw new Error(`/stations/predictions: ${r.status}`);
   return r.json();
 }

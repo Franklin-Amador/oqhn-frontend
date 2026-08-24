@@ -74,14 +74,16 @@ PUBLIC_API_URL=http://127.0.0.1:8001
 - **Polígonos grises** = departamentos de Honduras (GADM 4.1), tooltip al hacer hover
 - **Popup** muestra: lectura actual PM2.5, predicción +6 h con confianza, temp/humedad/PM1 y mini-gráfico de historial
 
-## Polling y caché
+## Polling y frescura de datos
 
-El frontend actualiza las predicciones cada **6 horas** en segundo plano (sin recargar la página). El botón "↻ Refrescar" fuerza una consulta inmediata (`?refresh=true`). La API tiene su propio caché en memoria:
+El frontend re-lee las predicciones cada **6 horas** en segundo plano (sin recargar la página). El botón "↻ Refrescar" vuelve a pedirlas de inmediato.
 
-| Endpoint | TTL |
-|----------|-----|
-| `GET /stations` | 1 hora |
-| `GET /stations/predictions` | 6 horas |
+Las predicciones no se calculan al vuelo: un GitHub Action las precalcula cada 6 h y las deja en Vercel Blob, y la API solo sirve ese JSON. Por eso refrescar más seguido no trae datos más nuevos — y por eso ninguna acción del usuario puede provocar una llamada a la API de OpenAQ.
+
+| Endpoint | Origen | Se regenera |
+|----------|--------|-------------|
+| `GET /stations` | `stations.json` en Blob | cada 6 h |
+| `GET /stations/predictions` | `predictions.json` en Blob | cada 6 h |
 
 ## Build para producción
 
