@@ -76,7 +76,7 @@ PUBLIC_API_URL=http://127.0.0.1:8001
 
 ## Polling y frescura de datos
 
-El frontend re-lee las predicciones cada **6 horas** en segundo plano (sin recargar la página). El botón "↻ Refrescar" vuelve a pedirlas de inmediato.
+El frontend re-lee las predicciones cada **6 horas** en segundo plano (sin recargar la página). El botón "↻ Refrescar" vuelve a pedirlas al backend de inmediato — lee el JSON ya calculado, no dispara ningún recálculo.
 
 Las predicciones no se calculan al vuelo: un GitHub Action las precalcula cada 6 h y las deja en Vercel Blob, y la API solo sirve ese JSON. Por eso refrescar más seguido no trae datos más nuevos — y por eso ninguna acción del usuario puede provocar una llamada a la API de OpenAQ.
 
