@@ -31,6 +31,25 @@ function fmt(v: number | null | undefined, digits: number, unit = ''): string {
   return `${v.toFixed(digits)}${unit}`;
 }
 
+/**
+ * Cuanto hace del dato, en horas, respecto a AHORA.
+ *
+ * Esto NO es sensor_ages_h: aquel mide el desfase entre sensores de la misma
+ * estacion, y como todos reportan a la misma hora sale 0 practicamente siempre.
+ * La antiguedad que le importa al usuario es la absoluta: OpenAQ agrega por
+ * horas y el precompute corre cada 6h, asi que la mediana real ronda las 3h y
+ * alguna estacion llega a 24. La tarjeta decia "Ahora" sin matizar nada.
+ */
+function antiguedadReal(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  const h = (Date.now() - t) / 3_600_000;
+  if (h < 1.5) return null;              // menos de hora y media: es "ahora"
+  if (h < 24) return `hace ${Math.round(h)}h`;
+  return `hace ${Math.round(h / 24)}d`;
+}
+
 const HORAS_GRAFICO = [24, 12, 6, 3, 1, 0] as const;
 
 /** Lectura de un lag de pm25, o null si no existe. Nunca 0 por defecto: un cero
@@ -130,7 +149,17 @@ export function StationPopup({ feature, pred, weather }: Props) {
       {/* Lectura actual */}
         <div>
           <div className="flex items-baseline justify-between mb-1">
-            <span className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Ahora</span>
+            <span className="text-xs uppercase tracking-wide text-slate-500 font-semibold">
+              Ahora
+              {antiguedadReal(pred.readings_timestamp) && (
+                <span
+                  className="ml-1.5 normal-case tracking-normal font-normal text-amber-600"
+                  title={`Última lectura de la estación: ${pred.readings_timestamp}. OpenAQ agrega por horas y el lote se recalcula cada 6 h.`}
+                >
+                  {antiguedadReal(pred.readings_timestamp)}
+                </span>
+              )}
+            </span>
             <span className="text-[10px] text-slate-400">PM2.5 µg/m³</span>
           </div>
           <div className="flex items-baseline gap-2">
