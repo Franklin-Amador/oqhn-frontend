@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Logs de ejecucion (ruido, no versionar)
+*.log

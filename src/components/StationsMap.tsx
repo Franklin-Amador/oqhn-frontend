@@ -7,10 +7,12 @@ import {
   fetchDepartments,
   fetchPredictions,
   fetchStations,
+  fetchWeather,
   type DepartmentsGeoJSON,
   type PredictionsResponse,
   type StationPrediction,
   type StationsGeoJSON,
+  type WeatherResponse,
 } from '../lib/api';
 import { pinColor } from '../lib/aqi';
 import { MapLegend } from './MapLegend';
@@ -21,6 +23,9 @@ const HN_ZOOM = 7;
 // 6 h — igual que el cron que regenera predictions.json; refrescar más seguido
 // solo re-leería el mismo JSON.
 const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
+// El clima va por su cuenta: Open-Meteo no tiene API key, resuelve las 19
+// estaciones en una llamada y el dato de origen se refresca cada 15 min.
+const WEATHER_INTERVAL_MS = 30 * 60 * 1000;
 
 // Estilo sutil para los polígonos de departamentos (GADM 4.1)
 const DEPT_STYLE = {
@@ -57,6 +62,8 @@ export default function StationsMap() {
   const selectedDeptRef = useRef<Layer | null>(null);
 
   // Index O(1) por location_id
+  const [weather, setWeather] = useState<WeatherResponse | null>(null);
+
   const predsByLoc = useMemo(() => {
     const m = new Map<number, StationPrediction>();
     preds?.predictions.forEach((p) => m.set(p.location_id, p));
@@ -81,6 +88,11 @@ export default function StationsMap() {
       .catch((e) => !cancelled && setError(String(e)))
       .finally(() => !cancelled && setPredsLoading(false));
 
+    // Un fallo de clima no debe tumbar el mapa: se registra y se sigue.
+    fetchWeather()
+      .then((w) => !cancelled && setWeather(w))
+      .catch((e) => !cancelled && console.error('[weather]', e));
+
     return () => {
       cancelled = true;
     };
@@ -93,6 +105,16 @@ export default function StationsMap() {
         .then(setPreds)
         .catch((e) => console.error('[poll] predictions:', e));
     }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // Polling de clima cada 30 min, independiente del de predicciones
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchWeather()
+        .then(setWeather)
+        .catch((e) => console.error('[poll] weather:', e));
+    }, WEATHER_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 
@@ -176,8 +198,10 @@ export default function StationsMap() {
         {stations?.features.map((f) => {
           const lid = f.properties.id;
           const pred = predsByLoc.get(lid);
-          const category = pred?.has_data ? pred.prediction!.category : null;
-          const color = pinColor(category);
+          // El pin usa el pm25 MEDIDO, no la clase predicha: la medicion da los
+          // 5 niveles EPA sin margen de error, mientras que el modelo solo
+          // distingue 2 clases. La prediccion se muestra en la tarjeta.
+          const color = pinColor(pred?.has_data ? pred.sensor_readings?.pm25 : null);
           const [lon, lat] = f.geometry.coordinates;
           const hasData = !!pred?.has_data;
           const isStale = !!pred?.stale;
@@ -196,7 +220,11 @@ export default function StationsMap() {
               }}
             >
               <Popup>
-                <StationPopup feature={f} pred={pred} />
+                <StationPopup
+                  feature={f}
+                  pred={pred}
+                  weather={weather?.weather?.[String(f.properties.id)]}
+                />
               </Popup>
             </CircleMarker>
           );

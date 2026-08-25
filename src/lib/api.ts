@@ -37,13 +37,15 @@ export interface StationsGeoJSON {
 }
 
 export interface SensorReadings {
+  // null = la estacion no reporta ese sensor (o el dato es stale).
+  // El backend manda null en vez de 0.0 para que la UI no invente un "0 C".
   pm25: number;
-  pm10: number;
-  pm1: number;
-  temperature: number;
-  relativehumidity: number;
-  um003: number;
-  [lag: string]: number; // pm25_lag1h, pm25_roll4h_mean, etc.
+  pm10: number | null;
+  pm1: number | null;
+  temperature: number | null;
+  relativehumidity: number | null;
+  um003: number | null;
+  [lag: string]: number | null; // pm25_lag1h, pm25_roll4h_mean, etc.
 }
 
 export interface Prediction {
@@ -65,6 +67,11 @@ export interface StationPrediction {
   stale?: boolean;        // true = última lectura >25h, lags en 0
   stale_age_h?: number;  // horas desde la última lectura disponible
   sensor_readings?: SensorReadings;
+  /** Antiguedad en horas de cada lectura respecto a la hora mas reciente de la
+   *  estacion. Los sensores no reportan sincronizados: 0 = de la ultima hora. */
+  sensor_ages_h?: Record<string, number>;
+  /** Hora mas reciente con datos de la estacion (ISO, UTC). */
+  readings_timestamp?: string | null;
   prediction?: Prediction;
   error?: string;
 }
@@ -133,6 +140,44 @@ export type DepartmentsGeoJSON = FeatureCollection<
 >;
 
 /** Carga el GeoJSON estático servido desde /public. */
+export interface StationWeather {
+  temperature: number | null;
+  relativehumidity: number | null;
+  apparent: number | null;
+  precipitation: number | null;
+  wind_kmh: number | null;
+  weather_code: number | null;
+  weather_text: string;
+  observed_at: string | null;
+}
+
+export interface WeatherResponse {
+  fetched_at: string;
+  station_count: number;
+  ttl_seconds: number;
+  source: string;
+  cache_hit: boolean;
+  cache_age_s: number;
+  stale?: boolean;
+  error?: string;
+  /** location_id (como string) -> clima */
+  weather: Record<string, StationWeather>;
+}
+
+/**
+ * Clima actual por estacion, desde Open-Meteo via la API.
+ *
+ * Va aparte de /stations/predictions a proposito: el clima se refresca cada
+ * 30 min (Open-Meteo no tiene API key ni cuota que arriesgar) mientras que las
+ * predicciones de calidad del aire siguen el cron de 6h, porque salen de OpenAQ
+ * y el PM2.5 no cambia lo suficiente en media hora para justificar el coste.
+ */
+export async function fetchWeather(): Promise<WeatherResponse> {
+  const r = await fetch(`${API_URL}/stations/weather`);
+  if (!r.ok) throw new Error(`/stations/weather: ${r.status}`);
+  return r.json();
+}
+
 export async function fetchDepartments(): Promise<DepartmentsGeoJSON> {
   const r = await fetch('/honduras-departments.json');
   if (!r.ok) throw new Error(`/honduras-departments.json: ${r.status}`);
