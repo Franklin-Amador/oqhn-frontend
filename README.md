@@ -1,6 +1,12 @@
 # OQHN — Frontend
 
-Interfaz web del clasificador de calidad del aire para Honduras. Muestra un mapa interactivo con las estaciones OpenAQ y la predicción de categoría AQI a +6 horas generada por el modelo XGBoost.
+Interfaz web del clasificador de calidad del aire para Honduras. Muestra un mapa interactivo con
+las estaciones OpenAQ, la medición actual de PM2.5 y la predicción a +6 horas del modelo.
+
+> **Dos vocabularios, a propósito.** El mapa colorea con las **5 categorías EPA** derivadas del
+> PM2.5 *medido* (una tabla de consulta, siempre fiable). La *predicción* del modelo tiene solo
+> **2 clases**, `Good` y `Caution`, porque con 5 el dataset de Honduras no da. No son lo mismo y
+> la UI no debe mezclarlas: `AQI_*` en `lib/aqi.ts` es lo primero, `PRED_*` lo segundo.
 
 ## Stack
 
@@ -12,6 +18,7 @@ Interfaz web del clasificador de calidad del aire para Honduras. Muestra un mapa
 | Estilos | [Tailwind CSS 4](https://tailwindcss.com) (Vite plugin, sin `tailwind.config`) |
 | Bundler | Vite 7 (override en `package.json`) |
 | Datos | FastAPI local en `http://127.0.0.1:8001` |
+| Clima | Open-Meteo vía la API (`/stations/weather`), sin API key |
 | Polígonos | GADM 4.1 — 18 departamentos de Honduras (`/public/honduras-departments.json`) |
 
 ## Estructura
@@ -70,7 +77,9 @@ PUBLIC_API_URL=http://127.0.0.1:8001
 
 - **Pins grandes** (r=10, opacidad alta) → estación con datos en las últimas 25 h
 - **Pins pequeños** (r=7, opacidad baja, gris) → sin datos recientes
-- **Color del pin** = categoría AQI de la **predicción a +6 h** del modelo
+- **Color del pin** = categoría EPA del **PM2.5 medido ahora** (`pinColor(sensor_readings.pm25)`),
+  no de la predicción. Se cambió a propósito: pintar el mapa con la predicción hacía que el pin
+  y el popup contaran cosas distintas sin avisar.
 - **Polígonos grises** = departamentos de Honduras (GADM 4.1), tooltip al hacer hover
 - **Popup** muestra: lectura actual PM2.5, predicción +6 h con confianza, temp/humedad/PM1 y mini-gráfico de historial
 
@@ -84,6 +93,11 @@ Las predicciones no se calculan al vuelo: un GitHub Action las precalcula cada 6
 |----------|--------|-------------|
 | `GET /stations` | `stations.json` en Blob | cada 6 h |
 | `GET /stations/predictions` | `predictions.json` en Blob | cada 6 h |
+| `GET /stations/weather` | Open-Meteo, caché en la API | cada 30 min |
+
+El clima va aparte a propósito: Open-Meteo no tiene API key ni cuota que arriesgar, así que puede
+refrescarse cada 30 min. El PM2.5 sigue el cron de 6 h porque sale de OpenAQ y no cambia lo
+suficiente en media hora para justificar el coste.
 
 ## Build para producción
 
