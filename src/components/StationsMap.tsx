@@ -325,7 +325,7 @@ export default function StationsMap() {
                   maxWidth 320 porque el default de Leaflet son 300 y recortaria
                   la ultima columna del grafico. */}
               {!esMovil && (
-                <Popup maxWidth={320} autoPanPadding={[16, 24]} keepInView>
+                <Popup maxWidth={560} autoPanPadding={[16, 24]} keepInView>
                   <StationPopup
                     feature={f}
                     pred={pred}

@@ -134,7 +134,7 @@ function tintaSobre(cat: string): string {
 function contenedor(variante: 'popup' | 'hoja'): string {
   return variante === 'hoja'
     ? 'w-full font-sans'
-    : 'w-[min(19rem,calc(100vw-5rem))] font-sans';
+    : 'w-[min(34rem,calc(100vw-5rem))] font-sans';
 }
 
 export function StationPopup({ feature, pred, weather, variante = 'popup' }: Props) {
@@ -261,20 +261,9 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
     </p>
   );
 
-  return (
-    <div className={contenedor(variante)}>
-      {/* Cabecera: se colorea con la MEDICION, igual que el pin que el usuario
-          acaba de pulsar. Antes usaba la clase predicha, asi que un pin naranja
-          abria una tarjeta verde y no habia forma de entender por que. */}
-      <div
-        className="px-4 py-3"
-        style={{ backgroundColor: colorAhora, color: tintaSobre(catAhora) }}
-      >
-        <h3 className="text-[15px] font-bold leading-tight">{cleanName}</h3>
-        {locality && <p className="text-xs opacity-75">{locality}</p>}
-      </div>
-
-      <div className="divide-y divide-slate-200">
+  // La tarjeta son cuatro bloques que se componen distinto segun donde vaya.
+  const principal = (
+    <>
         {/* ── El veredicto. Es lo primero que se lee y va en palabras, no en
             numeros: "12,7 µg/m³" no le dice nada a casi nadie, "Aire limpio"
             si. El numero queda debajo como evidencia. ───────────────────── */}
@@ -298,7 +287,6 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
             </p>
           )}
         </div>
-
         {/* ── El pronostico, en terminos de CAMBIO. Decir "ahora Moderada, en 6h
             Precaucion" obliga a mapear dos escalas distintas; "se mantiene
             igual" no obliga a nada. ─────────────────────────────────────── */}
@@ -316,7 +304,11 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
             {confianzaEnPalabras(p.confidence)}
           </p>
         </div>
+    </>
+  );
 
+  const evidencia = (
+    <>
         {/* ── Tendencia reciente. Etiquetas en español y con unidad, que antes
             decian "now" en una interfaz en castellano. ──────────────────── */}
         {hayHistorial && (
@@ -359,35 +351,54 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
             </div>
           </div>
         )}
+        {/* ── Lo tecnico. Va abierto en las dos presentaciones.
+            En la hoja porque hay espacio de sobra y obligar a pulsar en un
+            movil es una vuelta de mas. En la burbuja porque desde que crece a
+            lo ancho tampoco falta sitio, y un desplegable que reordena la
+            tarjeta al abrirse es peor que enseñarlo desde el principio. ─── */}
+        <div className="px-4 py-3.5">
+          <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Detalles de la estación
+          </p>
+          {detalles}
+          {procedencia}
+        </div>
+    </>
+  );
 
-        {/* ── Lo tecnico.
-            En la burbuja va plegado: hay poco sitio, y quien solo quiere saber
-            si puede salir a correr no deberia pelearse con ello.
-            En la hoja va ABIERTO: hay espacio de sobra y en un movil obligar a
-            pulsar para ver el resto es una vuelta de mas. ─────────────────── */}
-        {variante === 'hoja' ? (
-          <div className="px-4 py-3.5">
-            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Detalles de la estación
-            </p>
-            {detalles}
-            {procedencia}
-          </div>
-        ) : (
-          /* py-3.5 y ancho completo a proposito: un objetivo tactil de 44px. Con
-             el padding anterior el area pulsable eran ~20px de alto. */
-          <details className="group">
-            <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium text-slate-500 outline-none select-none hover:text-slate-800 focus-visible:text-slate-800">
-              <span className="inline-block transition-transform group-open:rotate-90">›</span>
-              Ver detalles de la estación
-            </summary>
-            <div className="px-4 pb-3">
-              {detalles}
-              {procedencia}
-            </div>
-          </details>
-        )}
+  return (
+    <div className={contenedor(variante)}>
+      {/* Cabecera: se colorea con la MEDICION, igual que el pin que el usuario
+          acaba de pulsar. Antes usaba la clase predicha, asi que un pin naranja
+          abria una tarjeta verde y no habia forma de entender por que. */}
+      <div
+        className="px-4 py-3"
+        style={{ backgroundColor: colorAhora, color: tintaSobre(catAhora) }}
+      >
+        <h3 className="text-[15px] font-bold leading-tight">{cleanName}</h3>
+        {locality && <p className="text-xs opacity-75">{locality}</p>}
       </div>
+
+      {/* Dos maneras de componer los mismos bloques.
+
+          En la hoja, una columna: es un movil, el alto sobra y el ancho no.
+
+          En la burbuja, dos columnas. Con todo en vertical la tarjeta pasaba de
+          800px de alto, mas que muchas ventanas de portatil, y quedaba una
+          columna estrecha y larguisima. En escritorio el ancho es justo lo que
+          sobra: a la izquierda lo que hay que decidir (que aire hay y que se
+          espera), a la derecha la evidencia (la tendencia y los datos). ──── */}
+      {variante === 'hoja' ? (
+        <div className="divide-y divide-slate-200">
+          {principal}
+          {evidencia}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 divide-x divide-slate-200">
+          <div className="divide-y divide-slate-200">{principal}</div>
+          <div className="divide-y divide-slate-200">{evidencia}</div>
+        </div>
+      )}
     </div>
   );
 }
