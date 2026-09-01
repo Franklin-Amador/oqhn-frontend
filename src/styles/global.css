@@ -88,3 +88,10 @@
    y sin pista de por que. Un deslizamiento es un adorno; que la ficha aparezca
    no lo es. Si se quiere recuperar, la condicion es que la posicion en reposo
    sea correcta sin que nada tenga que ejecutarse. */
+
+/* Con la hoja inferior abierta, el zoom y la atribucion quedan justo debajo de
+   ella: 224x90 px tapados. Se ocultan mientras dura, igual que la leyenda. El
+   credito del mapa no se pierde: va en la linea de procedencia de la ficha. */
+.hoja-abierta .leaflet-bottom {
+  display: none;
+}

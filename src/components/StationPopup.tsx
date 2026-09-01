@@ -243,8 +243,9 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
 
   const procedencia = (
     <p className="mt-3 text-[11px] leading-snug text-slate-400">
-      Mediciones de la red Sustenta Honduras vía OpenAQ. Clima de Open-Meteo. El
-      pronóstico lo genera un modelo automático y puede equivocarse.
+      Mediciones de la red Sustenta Honduras vía OpenAQ. Clima de Open-Meteo.
+      Mapa © Esri. El pronóstico lo genera un modelo automático y puede
+      equivocarse.
     </p>
   );
 

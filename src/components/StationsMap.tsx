@@ -49,6 +49,19 @@ function CerrarAlTocarMapa({ onClose }: { onClose: () => void }) {
 
 const HN_CENTER: [number, number] = [14.5, -86.5];
 const HN_ZOOM = 7;
+
+// Tope de alejamiento. Sin esto se puede llegar al mundo entero, que es pedir
+// tiles de sitios que a nadie le interesan aqui. A zoom 6 Honduras entra de
+// sobra en cualquier pantalla.
+const ZOOM_MINIMO = 6;
+
+// Filas y columnas de tiles que Leaflet conserva FUERA de la vista antes de
+// tirarlos. Por defecto son 2, y por eso al desplazar el mapa lo que sale por un
+// lado se borra: Leaflet destruye el <img> y al volver lo recrea, con su
+// parpadeo, aunque el tile siga en la cache del navegador (Esri los sirve con
+// max-age de 24 h). Con 8 cabe Honduras entera alrededor de la vista, asi que
+// moverse por el pais ya no descarga nada.
+const TILES_EN_RESERVA = 8;
 // 6 h — igual que el cron que regenera predictions.json; refrescar más seguido
 // solo re-leería el mismo JSON.
 const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
@@ -170,10 +183,15 @@ export default function StationsMap() {
   };
 
   return (
-    <div className="relative h-screen w-screen">
+    <div
+      className={`relative h-screen w-screen${
+        esMovil && seleccionada != null ? ' hoja-abierta' : ''
+      }`}
+    >
       <MapContainer
         center={HN_CENTER}
         zoom={HN_ZOOM}
+        minZoom={ZOOM_MINIMO}
         scrollWheelZoom
         className="h-full w-full"
         /* El zoom por defecto va arriba a la izquierda, justo debajo de la
@@ -204,6 +222,7 @@ export default function StationsMap() {
           attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> · Límites: <a href="https://gadm.org/">GADM</a>'
           maxNativeZoom={16}
           maxZoom={19}
+          keepBuffer={TILES_EN_RESERVA}
         />
 
         {/* Overlay sutil de departamentos para dar contexto geográfico */}
