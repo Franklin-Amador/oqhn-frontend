@@ -219,7 +219,9 @@ export default function StationsMap() {
                 dashArray: isStale ? '4 3' : undefined,
               }}
             >
-              <Popup>
+              {/* 304px = w-[19rem] de la tarjeta. El default de Leaflet son
+                  300 y recortaria la ultima columna del grafico. */}
+              <Popup maxWidth={320} minWidth={304}>
                 <StationPopup
                   feature={f}
                   pred={pred}

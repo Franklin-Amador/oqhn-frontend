@@ -11,9 +11,17 @@
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   padding: 0;
+  /* Recorta a las esquinas redondeadas. Sin esto la franja de color de la
+     cabecera asoma por encima del radio y la tarjeta se ve rota arriba. */
+  overflow: hidden;
 }
 
-.leaflet-popup-content {
+/* Doble clase a proposito. Leaflet trae `.leaflet-popup-content { margin: 13px
+   24px 13px 20px }` en su hoja del CDN y con un solo `.leaflet-popup-content`
+   nuestro empataba en especificidad y perdia. El resultado eran 21px de blanco
+   a la izquierda y 25 a la derecha: la franja de color de la cabecera no llegaba
+   a los bordes y la tarjeta parecia flotar mal encajada dentro del popup. */
+.leaflet-popup .leaflet-popup-content {
   margin: 0;
   padding: 0;
   min-width: 240px;
