@@ -18,6 +18,11 @@ interface Props {
    *  El modelo de ML sigue usando el sensor internamente: se midio que cambiar
    *  la fuente no mueve el F1. */
   weather?: StationWeather;
+  /** 'popup' = burbuja anclada al pin (escritorio). 'hoja' = hoja inferior a
+   *  ancho completo (movil). Solo cambia el contenedor: el contenido y la
+   *  jerarquia son identicos, para que la misma informacion se lea igual en
+   *  los dos sitios. */
+  variante?: 'popup' | 'hoja';
 }
 
 /**
@@ -112,7 +117,15 @@ function tintaSobre(cat: string): string {
   return cat === 'Very Unhealthy' || cat === 'Unhealthy' ? '#ffffff' : '#111827';
 }
 
-export function StationPopup({ feature, pred, weather }: Props) {
+/** Contenedor segun la presentacion. En hoja el ancho y el scroll los gobierna
+ *  StationSheet, asi que aqui solo se ocupa todo el ancho disponible. */
+function contenedor(variante: 'popup' | 'hoja'): string {
+  return variante === 'hoja'
+    ? 'w-full font-sans'
+    : 'max-h-[70vh] w-[min(19rem,calc(100vw-5rem))] overflow-y-auto overscroll-contain font-sans';
+}
+
+export function StationPopup({ feature, pred, weather, variante = 'popup' }: Props) {
   const { name, locality } = feature.properties;
   const cleanName =
     name?.replace(/\s*-\s*Sustenta Honduras\s*$/, '').trim() ||
@@ -123,7 +136,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
   // excluir estas no ahorraria nada y descartarlo solo empobrece la tarjeta.
   if (!pred || !pred.has_data) {
     return (
-      <div className="w-[min(19rem,calc(100vw-5rem))] font-sans">
+      <div className={contenedor(variante)}>
         <div className="bg-slate-200 px-4 py-3">
           <h3 className="text-[15px] font-bold leading-tight text-slate-900">{cleanName}</h3>
           {locality && <p className="text-xs text-slate-600">{locality}</p>}
@@ -161,7 +174,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
   const hayHistorial = HORAS_GRAFICO.some((h) => h !== 0 && lecturaLag(r, h) != null);
 
   return (
-    <div className="max-h-[70vh] w-[min(19rem,calc(100vw-5rem))] overflow-y-auto overscroll-contain font-sans">
+    <div className={contenedor(variante)}>
       {/* Cabecera: se colorea con la MEDICION, igual que el pin que el usuario
           acaba de pulsar. Antes usaba la clase predicha, asi que un pin naranja
           abria una tarjeta verde y no habia forma de entender por que. */}

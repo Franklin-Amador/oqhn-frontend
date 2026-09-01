@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer } from 'react-leaflet';
+import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer, useMapEvent } from 'react-leaflet';
 import type { Layer } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -17,6 +17,35 @@ import {
 import { pinColor } from '../lib/aqi';
 import { MapLegend } from './MapLegend';
 import { StationPopup } from './StationPopup';
+import { StationSheet } from './StationSheet';
+
+/** Por debajo de esto la ficha se muestra como hoja inferior en vez de burbuja.
+ *  768px es el corte habitual de tablet; lo que importa es que en pantalla
+ *  tactil estrecha una burbuja anclada al pin no cabe bien. */
+const CORTE_MOVIL = '(max-width: 767px)';
+
+/** Sigue el media query en vivo: si giras el telefono, la ficha cambia de forma
+ *  sin recargar. */
+function useEsMovil(): boolean {
+  const [esMovil, setEsMovil] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia(CORTE_MOVIL);
+    const aplicar = () => setEsMovil(mq.matches);
+    aplicar();
+    mq.addEventListener('change', aplicar);
+    return () => mq.removeEventListener('change', aplicar);
+  }, []);
+  return esMovil;
+}
+
+/** Tocar el mapa cierra la hoja. Los clicks en un CircleMarker no llegan aqui
+ *  porque Leaflet los detiene en la capa, asi que no se cierra sola al elegir
+ *  otra estacion. */
+function CerrarAlTocarMapa({ onClose }: { onClose: () => void }) {
+  useMapEvent('click', onClose);
+  return null;
+}
 
 const HN_CENTER: [number, number] = [14.5, -86.5];
 const HN_ZOOM = 7;
@@ -63,6 +92,16 @@ export default function StationsMap() {
 
   // Index O(1) por location_id
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
+
+  // En movil la ficha no va anclada al pin sino en una hoja inferior, asi que
+  // hay que recordar que estacion se toco.
+  const esMovil = useEsMovil();
+  const [seleccionada, setSeleccionada] = useState<number | null>(null);
+
+  const estacionSeleccionada = useMemo(
+    () => stations?.features.find((f) => f.properties.id === seleccionada) ?? null,
+    [stations, seleccionada],
+  );
 
   const predsByLoc = useMemo(() => {
     const m = new Map<number, StationPrediction>();
@@ -212,6 +251,8 @@ export default function StationsMap() {
           />
         )}
 
+        {esMovil && <CerrarAlTocarMapa onClose={() => setSeleccionada(null)} />}
+
         {stations?.features.map((f) => {
           const lid = f.properties.id;
           const pred = predsByLoc.get(lid);
@@ -235,19 +276,27 @@ export default function StationsMap() {
                 fillOpacity: hasData ? (isStale ? 0.55 : 0.88) : 0.45,
                 dashArray: isStale ? '4 3' : undefined,
               }}
+              // Sin esto la hoja se cerraba en el mismo toque que la abria: a
+              // diferencia de un Marker, los eventos de una capa vectorial SI
+              // propagan al mapa en Leaflet, asi que el click del pin disparaba
+              // tambien el "tocar el mapa cierra".
+              bubblingMouseEvents={false}
+              eventHandlers={
+                esMovil ? { click: () => setSeleccionada(lid) } : undefined
+              }
             >
-              {/* La tarjeta mide min(19rem, 100vw - 3.5rem), asi que en un movil
-                  de 320px se encoge sola. maxWidth 320 cubre el caso ancho (el
-                  default de Leaflet son 300 y recortaria el grafico) y el padding
-                  del autoPan evita que el popup quede pegado al borde superior,
-                  donde en movil lo tapa el pulgar o la barra del navegador. */}
-              <Popup maxWidth={320} autoPanPadding={[16, 24]} keepInView>
-                <StationPopup
-                  feature={f}
-                  pred={pred}
-                  weather={weather?.weather?.[String(f.properties.id)]}
-                />
-              </Popup>
+              {/* En movil no se monta el Popup: la ficha va en hoja inferior.
+                  maxWidth 320 porque el default de Leaflet son 300 y recortaria
+                  la ultima columna del grafico. */}
+              {!esMovil && (
+                <Popup maxWidth={320} autoPanPadding={[16, 24]} keepInView>
+                  <StationPopup
+                    feature={f}
+                    pred={pred}
+                    weather={weather?.weather?.[String(f.properties.id)]}
+                  />
+                </Popup>
+              )}
             </CircleMarker>
           );
         })}
@@ -299,6 +348,17 @@ export default function StationsMap() {
       </header>
 
       <MapLegend />
+
+      {/* Hoja inferior: solo en movil, y fuera del MapContainer para que su
+          posicion no dependa de donde este el pin. */}
+      {esMovil && estacionSeleccionada && (
+        <StationSheet
+          feature={estacionSeleccionada}
+          pred={predsByLoc.get(estacionSeleccionada.properties.id)}
+          weather={weather?.weather?.[String(estacionSeleccionada.properties.id)]}
+          onClose={() => setSeleccionada(null)}
+        />
+      )}
     </div>
   );
 }

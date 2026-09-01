@@ -79,3 +79,12 @@
   opacity: 0.4;
   animation: pulse-ring 1.5s ease-out infinite;
 }
+
+/* La hoja inferior aparece sin animacion de entrada, a proposito.
+   Se intentaron tres formas -- @keyframes, una transicion sobre estado de React
+   con requestAnimationFrame, y @starting-style -- y las tres comparten el mismo
+   modo de fallo: la posicion final solo se alcanza SI la animacion llega a
+   correr, asi que cuando no corre la hoja se queda fuera de pantalla, invisible
+   y sin pista de por que. Un deslizamiento es un adorno; que la ficha aparezca
+   no lo es. Si se quiere recuperar, la condicion es que la posicion en reposo
+   sea correcta sin que nada tenga que ejecutarse. */
