@@ -138,10 +138,27 @@ export default function StationsMap() {
         scrollWheelZoom
         className="h-full w-full"
       >
+        {/* Esri World Light Gray, no CARTO.
+            CARTO cambio su politica y basemaps.cartocdn.com dejo de servir tiles
+            anonimos: ahora devuelve HTTP 200 con un PNG valido que lleva
+            "API KEY REQUIRED" estampado en diagonal. Como no es un error, nada
+            fallaba y el mapa "funcionaba" con la marca encima, tambien en
+            produccion. Y con cache-control de 180 dias, los navegadores que ya
+            tenian tiles limpios seguian mostrandolos: el fallo parecia afectar
+            solo a algunos dispositivos cuando en realidad afectaba a todos los
+            visitantes nuevos.
+
+            Esri no pide key ni cuenta. Ademas trae los nombres de los
+            departamentos dibujados, que en movil importa: los tooltips de los
+            poligonos son hover, y en una pantalla tactil no hay hover, asi que
+            hasta ahora en el telefono los departamentos salian sin nombre.
+
+            El servicio solo tiene tiles nativos hasta z16; maxNativeZoom hace que
+            Leaflet reescale por encima en vez de pedir tiles que no existen. */}
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · Boundaries: <a href="https://gadm.org/">GADM</a>'
-          subdomains="abcd"
+          url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+          attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> · Límites: <a href="https://gadm.org/">GADM</a>'
+          maxNativeZoom={16}
           maxZoom={19}
         />
 
@@ -219,9 +236,12 @@ export default function StationsMap() {
                 dashArray: isStale ? '4 3' : undefined,
               }}
             >
-              {/* 304px = w-[19rem] de la tarjeta. El default de Leaflet son
-                  300 y recortaria la ultima columna del grafico. */}
-              <Popup maxWidth={320} minWidth={304}>
+              {/* La tarjeta mide min(19rem, 100vw - 3.5rem), asi que en un movil
+                  de 320px se encoge sola. maxWidth 320 cubre el caso ancho (el
+                  default de Leaflet son 300 y recortaria el grafico) y el padding
+                  del autoPan evita que el popup quede pegado al borde superior,
+                  donde en movil lo tapa el pulgar o la barra del navegador. */}
+              <Popup maxWidth={320} autoPanPadding={[16, 24]} keepInView>
                 <StationPopup
                   feature={f}
                   pred={pred}

@@ -27,6 +27,18 @@
   min-width: 240px;
 }
 
+/* El boton de cerrar de Leaflet mide ~14px, que como objetivo tactil es
+   insuficiente. Se agranda el area pulsable sin mover el icono de sitio. */
+.leaflet-popup-close-button {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  font-size: 1.25rem !important;
+  line-height: 2rem !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
 .leaflet-popup-tip {
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
 }

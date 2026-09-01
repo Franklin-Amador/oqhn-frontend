@@ -123,7 +123,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
   // excluir estas no ahorraria nada y descartarlo solo empobrece la tarjeta.
   if (!pred || !pred.has_data) {
     return (
-      <div className="w-[19rem] font-sans">
+      <div className="w-[min(19rem,calc(100vw-5rem))] font-sans">
         <div className="bg-slate-200 px-4 py-3">
           <h3 className="text-[15px] font-bold leading-tight text-slate-900">{cleanName}</h3>
           {locality && <p className="text-xs text-slate-600">{locality}</p>}
@@ -161,7 +161,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
   const hayHistorial = HORAS_GRAFICO.some((h) => h !== 0 && lecturaLag(r, h) != null);
 
   return (
-    <div className="w-[19rem] font-sans">
+    <div className="max-h-[70vh] w-[min(19rem,calc(100vw-5rem))] overflow-y-auto overscroll-contain font-sans">
       {/* Cabecera: se colorea con la MEDICION, igual que el pin que el usuario
           acaba de pulsar. Antes usaba la clase predicha, asi que un pin naranja
           abria una tarjeta verde y no habia forma de entender por que. */}
@@ -184,11 +184,11 @@ export function StationPopup({ feature, pred, weather }: Props) {
           <p className="mt-0.5 text-[22px] font-bold leading-tight text-slate-900">
             {AQI_LABELS_ES[catAhora]}
           </p>
-          <p className="mt-1 text-[12px] text-slate-500 tabular-nums">
+          <p className="mt-1 text-[12.5px] text-slate-500 tabular-nums">
             {fmt(r.pm25, 1)} µg/m³ de PM2.5
             {desfase && <span className="text-amber-700"> · {desfase}</span>}
           </p>
-          <p className="mt-2 text-[13px] leading-snug text-slate-700">
+          <p className="mt-2 text-[13.5px] leading-snug text-slate-700">
             {AQI_HEALTH_MSG[catAhora]}
           </p>
           {isStale && (
@@ -209,7 +209,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
             <span aria-hidden="true">{pron.flecha}</span>
             {pron.texto}
           </p>
-          <p className="mt-1 text-[12px] text-slate-500">
+          <p className="mt-1 text-[12.5px] text-slate-500">
             Se espera <span className="font-medium text-slate-700">{predLabel(p.category).toLowerCase()}</span>
             {' · '}
             {confianzaEnPalabras(p.confidence)}
@@ -249,7 +249,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
                         />
                       )}
                     </div>
-                    <span className="text-[9px] leading-none text-slate-500">
+                    <span className="text-[10px] leading-none text-slate-500">
                       {esAhora ? 'ahora' : `−${h}h`}
                     </span>
                   </div>
@@ -262,13 +262,17 @@ export function StationPopup({ feature, pred, weather }: Props) {
         {/* ── Todo lo tecnico, plegado. No se pierde nada: simplemente deja de
             competir por la atencion de quien solo quiere saber si puede salir a
             correr. ──────────────────────────────────────────────────────── */}
-        <details className="group px-4 py-2.5">
-          <summary className="cursor-pointer list-none text-[12px] font-medium text-slate-500 outline-none hover:text-slate-800 focus-visible:text-slate-800">
-            <span className="inline-block transition-transform group-open:rotate-90">›</span>{' '}
+        {/* py-3 y ancho completo a proposito: un objetivo tactil de 44px. Con
+            el padding anterior el area pulsable eran ~20px de alto, que en un
+            movil es una loteria. */}
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium text-slate-500 outline-none select-none hover:text-slate-800 focus-visible:text-slate-800">
+            <span className="inline-block transition-transform group-open:rotate-90">›</span>
             Ver detalles de la estación
           </summary>
+          <div className="px-4 pb-3">
 
-          <dl className="mt-3 space-y-1.5 text-[12px]">
+          <dl className="space-y-2 text-[12.5px]">
             <div className="flex items-baseline justify-between gap-3">
               <dt className="text-slate-500">Partículas finas (PM1)</dt>
               <dd className="font-medium text-slate-800 tabular-nums">
@@ -336,6 +340,7 @@ export function StationPopup({ feature, pred, weather }: Props) {
             Mediciones de la red Sustenta Honduras vía OpenAQ. Clima de Open-Meteo.
             El pronóstico lo genera un modelo automático y puede equivocarse.
           </p>
+          </div>
         </details>
       </div>
     </div>
