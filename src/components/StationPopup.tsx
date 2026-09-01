@@ -118,11 +118,23 @@ function tintaSobre(cat: string): string {
 }
 
 /** Contenedor segun la presentacion. En hoja el ancho y el scroll los gobierna
- *  StationSheet, asi que aqui solo se ocupa todo el ancho disponible. */
+ *  StationSheet, asi que aqui solo se ocupa todo el ancho disponible.
+ *
+ *  La burbuja NO lleva tope de altura ni scroll propio, y es deliberado. Lo
+ *  llevaba (70vh) heredado de la hoja, y el resultado era una barra de scroll
+ *  permanente: la tarjeta plegada mide 605px de forma natural, asi que con el
+ *  tope en 602 se desbordaba por TRES pixeles y Windows dibujaba 15px de barra
+ *  para desplazar eso. Subirlo a 85vh solo movia el problema a las pantallas
+ *  bajas — en 1366x660 el tope cae en 561 y la barra vuelve.
+ *
+ *  Sin tope no hay barra en ningun caso. Si la ventana es muy baja y ademas se
+ *  despliegan los detalles, la burbuja queda alta y Leaflet la reposiciona con
+ *  su autoPan, que es el comportamiento normal de un mapa y molesta bastante
+ *  menos que 15px de barra comiendo ancho en todas las tarjetas. */
 function contenedor(variante: 'popup' | 'hoja'): string {
   return variante === 'hoja'
     ? 'w-full font-sans'
-    : 'max-h-[70vh] w-[min(19rem,calc(100vw-5rem))] overflow-y-auto overscroll-contain font-sans';
+    : 'w-[min(19rem,calc(100vw-5rem))] font-sans';
 }
 
 export function StationPopup({ feature, pred, weather, variante = 'popup' }: Props) {
