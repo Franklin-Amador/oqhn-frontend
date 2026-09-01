@@ -69,16 +69,27 @@ const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 // estaciones en una llamada y el dato de origen se refresca cada 15 min.
 const WEATHER_INTERVAL_MS = 30 * 60 * 1000;
 
-// Estilo sutil para los polígonos de departamentos (GADM 4.1)
+// Polígonos de departamentos (GADM 4.1). En reposo son INVISIBLES: solo zonas
+// sensibles al puntero.
+//
+// Antes se dibujaban con borde propio y relleno al 40%, y el resultado eran
+// líneas dobles: los tiles de Esri YA traen los límites administrativos, y GADM
+// es otra versión de la misma frontera con otra generalización, así que las dos
+// no encajan y se ven desplazadas una respecto a la otra. El relleno además
+// apagaba el mapa y creaba bandas donde dos departamentos se tocan.
+//
+// Ahora el dibujo lo pone el mapa y la interacción la ponen estos polígonos.
+// fillOpacity 0.01 y no 0: con 0 exacto el path deja de recibir eventos en
+// algunos navegadores, y se perderían el hover y el tooltip.
 const DEPT_STYLE = {
-  fillColor: '#e2e8f0',   // slate-200
-  fillOpacity: 0.4,
-  color: '#94a3b8',       // slate-400
-  weight: 0.8,
-  opacity: 0.8,
+  stroke: false,
+  fill: true,
+  fillColor: '#0f172a',
+  fillOpacity: 0.01,
 };
 
 const DEPT_HOVER_STYLE = {
+  stroke: true,
   fillColor: '#cbd5e1',   // slate-300
   fillOpacity: 0.6,
   color: '#475569',       // slate-600
@@ -87,6 +98,7 @@ const DEPT_HOVER_STYLE = {
 
 // Borde remarcado al seleccionar un departamento con click
 const DEPT_SELECTED_STYLE = {
+  stroke: true,
   fillColor: '#cbd5e1',   // slate-300
   fillOpacity: 0.45,
   color: '#1e293b',       // slate-900 — borde bien oscuro y visible
