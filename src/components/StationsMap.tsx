@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer, useMapEvent } from 'react-leaflet';
+import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer, useMapEvent, ZoomControl } from 'react-leaflet';
 import type { Layer } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -176,7 +176,12 @@ export default function StationsMap() {
         zoom={HN_ZOOM}
         scrollWheelZoom
         className="h-full w-full"
+        /* El zoom por defecto va arriba a la izquierda, justo debajo de la
+           cabecera: llevaba tapado desde siempre, en todas las tallas. Se mueve
+           abajo a la derecha, encima de la atribucion. */
+        zoomControl={false}
       >
+        <ZoomControl position="bottomright" />
         {/* Esri World Light Gray, no CARTO.
             CARTO cambio su politica y basemaps.cartocdn.com dejo de servir tiles
             anonimos: ahora devuelve HTTP 200 con un PNG valido que lleva
@@ -314,7 +319,7 @@ export default function StationsMap() {
               : 'Cargando estaciones…'}
           </p>
           <p className="text-[11px] text-slate-500 mt-1">
-            Predicción AQI a +6h · XGBoost · datos OpenAQ v3
+            Color del pin = medición actual · predicción a +6h en cada ficha
           </p>
         </div>
 
@@ -347,7 +352,9 @@ export default function StationsMap() {
         </div>
       </header>
 
-      <MapLegend />
+      {/* En movil la leyenda queda debajo de la hoja: se oculta mientras esta
+          abierta en vez de amontonarse. */}
+      {!(esMovil && seleccionada != null) && <MapLegend />}
 
       {/* Hoja inferior: solo en movil, y fuera del MapContainer para que su
           posicion no dependa de donde este el pin. */}

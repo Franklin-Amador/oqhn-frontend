@@ -173,6 +173,81 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
   );
   const hayHistorial = HORAS_GRAFICO.some((h) => h !== 0 && lecturaLag(r, h) != null);
 
+  // El bloque de datos tecnicos es identico en las dos presentaciones; solo
+  // cambia si va plegado o abierto. Se define una vez para no duplicarlo.
+  const detalles = (
+    <dl className="space-y-2 text-[12.5px]">
+      <div className="flex items-baseline justify-between gap-3">
+        <dt className="text-slate-500">Partículas finas (PM1)</dt>
+        <dd className="font-medium text-slate-800 tabular-nums">
+          {fmt(r.pm1, 1)}
+          {edad(pred.sensor_ages_h, 'pm1') && (
+            <span className="ml-1 font-normal text-slate-400">
+              {edad(pred.sensor_ages_h, 'pm1')}
+            </span>
+          )}
+        </dd>
+      </div>
+
+      {/* Se muestran LAS DOS fuentes de temperatura, etiquetadas. Medido
+          contra 181 horas en Colonia Los Pinos: el termometro va dentro
+          del housing del sensor de particulas y corre unos +4 C sobre el
+          modelo; pero el modelo (malla ~9 km) exagera la amplitud diurna
+          y se pasa a media manana. Ninguna es verdad de campo, asi que
+          dar un solo numero seria fingir una precision que no hay. */}
+      <div
+        className="flex items-baseline justify-between gap-3"
+        title="Termómetro de la propia estación. Comparte carcasa con el sensor de partículas, así que suele leer varios grados por encima del ambiente."
+      >
+        <dt className="text-slate-500">Termómetro de la estación</dt>
+        <dd className="font-medium text-slate-800 tabular-nums">
+          {fmt(r.temperature, 0, '°')} · {fmt(r.relativehumidity, 0, '%')}
+        </dd>
+      </div>
+
+      <div
+        className="flex items-baseline justify-between gap-3"
+        title="Modelo meteorológico Open-Meteo sobre una malla de ~9 km. No es una medición en el sitio: tiende a exagerar la subida de media mañana."
+      >
+        <dt className="text-slate-500">Clima de la zona</dt>
+        <dd className="font-medium text-slate-800 tabular-nums">
+          {fmt(weather?.temperature, 0, '°')} · {fmt(weather?.relativehumidity, 0, '%')}
+          {weather?.apparent != null && (
+            <span className="ml-1 font-normal text-slate-400">
+              sensación {weather.apparent.toFixed(0)}°
+            </span>
+          )}
+        </dd>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-3">
+        <dt className="text-slate-500">Confianza del pronóstico</dt>
+        <dd className="font-medium text-slate-800 tabular-nums">
+          {(p.confidence * 100).toFixed(0)}%
+        </dd>
+      </div>
+
+      {weather?.weather_text && (
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="text-slate-500">Tiempo</dt>
+          <dd className="text-right font-medium text-slate-800">
+            {weather.weather_text}
+            {weather.precipitation != null && weather.precipitation > 0 &&
+              ` · ${weather.precipitation.toFixed(1)} mm`}
+            {weather.wind_kmh != null && ` · ${weather.wind_kmh.toFixed(0)} km/h`}
+          </dd>
+        </div>
+      )}
+    </dl>
+  );
+
+  const procedencia = (
+    <p className="mt-3 text-[11px] leading-snug text-slate-400">
+      Mediciones de la red Sustenta Honduras vía OpenAQ. Clima de Open-Meteo. El
+      pronóstico lo genera un modelo automático y puede equivocarse.
+    </p>
+  );
+
   return (
     <div className={contenedor(variante)}>
       {/* Cabecera: se colorea con la MEDICION, igual que el pin que el usuario
@@ -272,89 +347,33 @@ export function StationPopup({ feature, pred, weather, variante = 'popup' }: Pro
           </div>
         )}
 
-        {/* ── Todo lo tecnico, plegado. No se pierde nada: simplemente deja de
-            competir por la atencion de quien solo quiere saber si puede salir a
-            correr. ──────────────────────────────────────────────────────── */}
-        {/* py-3 y ancho completo a proposito: un objetivo tactil de 44px. Con
-            el padding anterior el area pulsable eran ~20px de alto, que en un
-            movil es una loteria. */}
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium text-slate-500 outline-none select-none hover:text-slate-800 focus-visible:text-slate-800">
-            <span className="inline-block transition-transform group-open:rotate-90">›</span>
-            Ver detalles de la estación
-          </summary>
-          <div className="px-4 pb-3">
-
-          <dl className="space-y-2 text-[12.5px]">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-slate-500">Partículas finas (PM1)</dt>
-              <dd className="font-medium text-slate-800 tabular-nums">
-                {fmt(r.pm1, 1)}
-                {edad(pred.sensor_ages_h, 'pm1') && (
-                  <span className="ml-1 font-normal text-slate-400">
-                    {edad(pred.sensor_ages_h, 'pm1')}
-                  </span>
-                )}
-              </dd>
-            </div>
-
-            {/* Se muestran LAS DOS fuentes de temperatura, etiquetadas. Medido
-                contra 181 horas en Colonia Los Pinos: el termometro va dentro
-                del housing del sensor de particulas y corre unos +4 C sobre el
-                modelo; pero el modelo (malla ~9 km) exagera la amplitud diurna
-                y se pasa a media manana. Ninguna es verdad de campo, asi que
-                dar un solo numero seria fingir una precision que no hay. */}
-            <div
-              className="flex items-baseline justify-between gap-3"
-              title="Termómetro de la propia estación. Comparte carcasa con el sensor de partículas, así que suele leer varios grados por encima del ambiente."
-            >
-              <dt className="text-slate-500">Termómetro de la estación</dt>
-              <dd className="font-medium text-slate-800 tabular-nums">
-                {fmt(r.temperature, 0, '°')} · {fmt(r.relativehumidity, 0, '%')}
-              </dd>
-            </div>
-
-            <div
-              className="flex items-baseline justify-between gap-3"
-              title="Modelo meteorológico Open-Meteo sobre una malla de ~9 km. No es una medición en el sitio: tiende a exagerar la subida de media mañana."
-            >
-              <dt className="text-slate-500">Clima de la zona</dt>
-              <dd className="font-medium text-slate-800 tabular-nums">
-                {fmt(weather?.temperature, 0, '°')} · {fmt(weather?.relativehumidity, 0, '%')}
-                {weather?.apparent != null && (
-                  <span className="ml-1 font-normal text-slate-400">
-                    sensación {weather.apparent.toFixed(0)}°
-                  </span>
-                )}
-              </dd>
-            </div>
-
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-slate-500">Confianza del pronóstico</dt>
-              <dd className="font-medium text-slate-800 tabular-nums">
-                {(p.confidence * 100).toFixed(0)}%
-              </dd>
-            </div>
-
-            {weather?.weather_text && (
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-slate-500">Tiempo</dt>
-                <dd className="text-right font-medium text-slate-800">
-                  {weather.weather_text}
-                  {weather.precipitation != null && weather.precipitation > 0 &&
-                    ` · ${weather.precipitation.toFixed(1)} mm`}
-                  {weather.wind_kmh != null && ` · ${weather.wind_kmh.toFixed(0)} km/h`}
-                </dd>
-              </div>
-            )}
-          </dl>
-
-          <p className="mt-3 text-[11px] leading-snug text-slate-400">
-            Mediciones de la red Sustenta Honduras vía OpenAQ. Clima de Open-Meteo.
-            El pronóstico lo genera un modelo automático y puede equivocarse.
-          </p>
+        {/* ── Lo tecnico.
+            En la burbuja va plegado: hay poco sitio, y quien solo quiere saber
+            si puede salir a correr no deberia pelearse con ello.
+            En la hoja va ABIERTO: hay espacio de sobra y en un movil obligar a
+            pulsar para ver el resto es una vuelta de mas. ─────────────────── */}
+        {variante === 'hoja' ? (
+          <div className="px-4 py-3.5">
+            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Detalles de la estación
+            </p>
+            {detalles}
+            {procedencia}
           </div>
-        </details>
+        ) : (
+          /* py-3.5 y ancho completo a proposito: un objetivo tactil de 44px. Con
+             el padding anterior el area pulsable eran ~20px de alto. */
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3.5 text-[13px] font-medium text-slate-500 outline-none select-none hover:text-slate-800 focus-visible:text-slate-800">
+              <span className="inline-block transition-transform group-open:rotate-90">›</span>
+              Ver detalles de la estación
+            </summary>
+            <div className="px-4 pb-3">
+              {detalles}
+              {procedencia}
+            </div>
+          </details>
+        )}
       </div>
     </div>
   );

@@ -3,8 +3,12 @@ import { AQI_CATEGORIES, AQI_COLORS, AQI_LABELS_ES, NO_DATA_COLOR } from '../lib
 export function MapLegend() {
   return (
     <div className="absolute bottom-6 left-4 z-[1000] rounded-xl bg-white/95 backdrop-blur shadow-lg border border-slate-200 p-3 text-sm max-w-xs">
+      {/* Decia "(prediccion a +6h)" y era falso: el pin se colorea con el pm2.5
+          MEDIDO, no con la clase predicha. Se cambio el color del pin en su dia y
+          la leyenda se quedo describiendo lo anterior. */}
       <p className="font-semibold text-slate-900 mb-2">
-        Categoría AQI <span className="text-xs font-normal text-slate-500">(predicción a +6h)</span>
+        Calidad del aire{' '}
+        <span className="text-xs font-normal text-slate-500">(medición actual)</span>
       </p>
       <ul className="space-y-1.5">
         {AQI_CATEGORIES.map((cat) => (
